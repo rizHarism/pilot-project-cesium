@@ -12,7 +12,7 @@ const CONFIG = {
 
     // Data Paths
     data: {
-        orthophotoTilesUrl: '/../data/imagery3/{z}/{x}/{y}.png',  // XYZ tiles pattern
+        orthophotoTilesUrl: '/data/imagery3/{z}/{x}/{y}.png',  // XYZ tiles pattern
         // Note: Use {y} for standard XYZ tiles, {reverseY} for TMS format
     },
 
