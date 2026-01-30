@@ -1,0 +1,24 @@
+{
+  "name": "cesium-digital-twin-pilot",
+  "version": "1.0.0",
+  "description": "Digital Twin Pilot Project - Cesium Viewer with Orthophoto and DSM",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "http-server . -p 8080 -c-1 --cors",
+    "dev": "http-server . -p 8080 -c-1 --cors -o /src/index.html"
+  },
+  "keywords": [
+    "cesium",
+    "digital-twin",
+    "3d",
+    "gis"
+  ],
+  "author": "ARUNIKA",
+  "license": "ISC",
+  "dependencies": {
+    "cesium": "^1.113.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
