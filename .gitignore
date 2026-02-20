@@ -6,13 +6,17 @@ yarn.lock
 # Data files (too large for git)
 data/imagery/*
 data/imagery2/*
+data/imagery4/*
+data/imagery5/*
 data/terrain/*
 data/3dtiles/*
 
 # Keep data directory structure
 !data/imagery/.gitkeep
 !data/imagery2/.gitkeep
-!data/terrain/.gitkeep
+!data/imagery4/.gitkeep
+!data/imagery5/.gitkeep
+!data/terrain/.gitkeep  
 !data/3dtiles/.gitkeep
 
 # Environment variables

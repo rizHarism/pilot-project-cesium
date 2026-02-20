@@ -47,16 +47,16 @@
                 Orthophoto Layer
             </label>
             <label>
-                <input type="checkbox" id="toggleDSM" checked>
-                DSM (Surface)
-            </label>
-            <label>
-                <input type="checkbox" id="toggleDTM">
-                DTM (Ground)
+                <input type="checkbox" id="toggleDTM" checked>
+                DTM (Ground Terrain)
             </label>
             <label>
                 <input type="checkbox" id="togglePointCloud" checked>
                 LiDAR Point Cloud
+            </label>
+            <label>
+                <input type="checkbox" id="toggle3DObjects" checked>
+                3D Objects (GLB)
             </label>
         </div>
 
@@ -68,6 +68,17 @@
             </div>
             <div style="display: flex; justify-content: flex-end;">
                 <span class="slider-value" id="opacityValue">100%</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>🌊 Flood Simulation</h3>
+            <label>Water Level (m)</label>
+            <div class="slider-container">
+                <input type="range" id="waterLevelSlider" min="160" max="170" step="0.01" value="161">
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+                <span class="slider-value" id="waterLevelValue">161m</span>
             </div>
         </div>
 

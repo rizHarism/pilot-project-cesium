@@ -16,7 +16,8 @@
   "author": "ARUNIKA",
   "license": "ISC",
   "dependencies": {
-    "cesium": "^1.113.0"
+    "cesium": "^1.113.0",
+    "express": "^5.2.1"
   },
   "devDependencies": {
     "http-server": "^14.1.1"

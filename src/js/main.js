@@ -7,9 +7,12 @@ Cesium.Ion.defaultAccessToken = CONFIG.ion.accessToken;
 // Global viewer reference
 let viewer;
 let orthophotoLayer;
-let dsmProvider;
 let dtmProvider;
 let pointCloudTileset;
+let loadedModels = [];
+let floodEntity;
+let riverDataSource;
+let waterHeight = 160.0;
 
 /**
  * Initialize Cesium Viewer
@@ -19,8 +22,8 @@ async function initializeViewer() {
         // Create Cesium Viewer
         viewer = new Cesium.Viewer('cesiumContainer', {
             ...CONFIG.viewer,
-            // Use default Cesium World Terrain initially, will replace with custom
-            terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(1, {
+            // Use local terrain provider
+            terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl(CONFIG.data.terrainUrl, {
                 requestVertexNormals: true,
                 requestWaterMask: false
             })
@@ -39,6 +42,13 @@ async function initializeViewer() {
         await loadTerrain();
         await loadOrthophoto();
         await loadPointCloud();
+        await loadModels();
+        
+        // Setup water simulation layer
+        setupWaterSimulation();
+        
+        // Load static river from GeoJSON
+        // await loadRiverGeoJson();
 
         // Setup camera and controls
         setupCamera();
@@ -64,31 +74,22 @@ async function initializeViewer() {
  */
 async function loadTerrain() {
     try {
-        console.log('Loading terrains from Cesium Ion...');
+        console.log('Loading local terrain from folder...');
         
-        // Load DSM
-        dsmProvider = await Cesium.CesiumTerrainProvider.fromIonAssetId(
-            CONFIG.ion.terrainAssetId,
+        // Load local terrain
+        dtmProvider = await Cesium.CesiumTerrainProvider.fromUrl(
+            CONFIG.data.terrainUrl,
             {
                 requestVertexNormals: true,
                 requestWaterMask: false
             }
         );
 
-        // Load DTM
-        dtmProvider = await Cesium.CesiumTerrainProvider.fromIonAssetId(
-            CONFIG.ion.terrain2AssetId,
-            {
-                requestVertexNormals: true,
-                requestWaterMask: false
-            }
-        );
-
-        // Set default terrain (DSM)
-        viewer.terrainProvider = dsmProvider;
+        // Set default terrain (Local DTM)
+        viewer.terrainProvider = dtmProvider;
         
-        console.log('✅ Terrains loaded successfully');
-        updateStatus('Terrains loaded');
+        console.log('✅ Local Terrain loaded successfully');
+        updateStatus('DTM Terrain loaded');
         
     } catch (error) {
         console.error('❌ Error loading terrain:', error);
@@ -109,20 +110,20 @@ async function loadOrthophoto() {
         // Add custom orthophoto tiles with proper configuration
         const imageryProvider = new Cesium.UrlTemplateImageryProvider({
             url: CONFIG.data.orthophotoTilesUrl,
-            minimumLevel: 14,  // FIXED: was swapped!
-            maximumLevel: 18,  // FIXED: was swapped!
+            minimumLevel: 18,  // FIXED: was swapped!
+            maximumLevel: 22,  // FIXED: was swapped!
             
             // CRITICAL: Add proper tiling scheme to prevent cache enumeration error
             tilingScheme: new Cesium.WebMercatorTilingScheme(),
-            
-            // CRITICAL: Add rectanggle bound
+            // tilingScheme: new Cesium.GeographicTilingScheme(), 
+
             rectangle: Cesium.Rectangle.fromDegrees(
-                112.1740177820000071,-8.1624661209999996, 112.1796697660000035,-8.1567505919999999
-                // 117.4681939, 0.1704951, 117.4725830,   117.1749142 0.1749142   // data bontang
+                112.172618282,
+                -8.167123097,
+                112.179076059,
+                -8.158026721
             ),
             
-            hasAlphaChannel: true,
-
             // Handle tile loading gracefully
             hasAlphaChannel: true,
             
@@ -167,7 +168,7 @@ async function loadPointCloud() {
         // 1. Ambil posisi pusat tileset
         const surfacePosition = pointCloudTileset.boundingSphere.center;
         // 2. Tentukan offset lokal (misal: naik 35 meter)
-        const offset = new Cesium.Cartesian3(0, 0, 26.0); 
+        const offset = new Cesium.Cartesian3(0, 0, 0); 
         // 3. Hitung matrix transformasi
         const translationMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(surfacePosition);
         const localTranslation = Cesium.Matrix4.fromTranslation(offset);
@@ -188,9 +189,138 @@ async function loadPointCloud() {
 }
 
 /**
+ * Load Multiple GLB Models from Config
+ */
+async function loadModels() {
+    try {
+        console.log('Loading GLB models from config...');
+        
+        // Remove existing models if any
+        loadedModels.forEach(m => viewer.scene.primitives.remove(m));
+        loadedModels = [];
+
+        for (const modelConfig of CONFIG.data.models) {
+            const position = Cesium.Cartesian3.fromDegrees(
+                modelConfig.longitude,
+                modelConfig.latitude,
+                modelConfig.height || 0
+            );
+
+            // 1. Create global transformation matrix (Translation to GPS)
+            const worldMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+
+            // 2. Create rotation matrix from Heading, Pitch, Roll
+            const heading = Cesium.Math.toRadians(modelConfig.heading || 90);
+            const pitch = 0;
+            const roll = 0;
+            const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+            const rotationMatrix = Cesium.Matrix4.fromRotationTranslation(
+                Cesium.Matrix3.fromQuaternion(Cesium.Quaternion.fromHeadingPitchRoll(hpr))
+            );
+
+            // 3. Create local offset matrix
+            const offset = modelConfig.localOffset || { x: 0, y: 0, z: 0 };
+            const offsetMatrix = Cesium.Matrix4.fromTranslation(
+                new Cesium.Cartesian3(offset.x, offset.y, offset.z)
+            );
+
+            // 4. Compose: World * Rotation * Offset
+            const modelMatrix = new Cesium.Matrix4();
+            Cesium.Matrix4.multiply(worldMatrix, rotationMatrix, modelMatrix);
+            Cesium.Matrix4.multiply(modelMatrix, offsetMatrix, modelMatrix);
+
+            const model = await Cesium.Model.fromGltfAsync({
+                url: modelConfig.url,
+                modelMatrix: modelMatrix,
+                scale: 1,
+                heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
+            });
+
+            // ATTACH METADATA
+            // We use the 'id' property which Cesium uses for picking
+            model.id = modelConfig; 
+
+            viewer.scene.primitives.add(model);
+            loadedModels.push(model);
+        }
+
+        // --- ADD INTERACTIVITY HANDLERS ---
+        setupModelInteractivity();
+        
+        console.log(`✅ Loaded ${loadedModels.length} GLB models successfully`);
+        updateStatus(`${loadedModels.length} Models loaded with Interactivity`);
+        
+    } catch (error) {
+        console.error('❌ Error loading models:', error);
+        showError('Failed to load models: ' + error.message);
+    }
+}
+
+/**
+ * Setup Hover and Click Interactivity for Models
+ */
+function setupModelInteractivity() {
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    let lastHoveredModel = null;
+
+    // 1. HOVER EFFECT (Color Change)
+    handler.setInputAction((movement) => {
+        const pickedObject = viewer.scene.pick(movement.endPosition);
+        
+        // Reset previous model color
+        if (lastHoveredModel) {
+            lastHoveredModel.color = Cesium.Color.WHITE;
+            lastHoveredModel = null;
+        }
+
+        if (Cesium.defined(pickedObject) && pickedObject.primitive instanceof Cesium.Model) {
+            const model = pickedObject.primitive;
+            lastHoveredModel = model;
+
+            // Change color to Green on hover
+            // model.color = Cesium.Color.LIME; // Or Cesium.Color.ORANGE
+            model.colorBlendMode = Cesium.ColorBlendMode.HIGHLIGHT;
+            
+            // Show shortcut in status bar
+            if (model.id && model.id.name) {
+                updateStatus(`Hover: ${model.id.name} (${model.id.category})`);
+            }
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    // 2. CLICK EFFECT (Show Popup)
+    handler.setInputAction((click) => {
+        const pickedObject = viewer.scene.pick(click.position);
+        
+        if (Cesium.defined(pickedObject) && pickedObject.primitive instanceof Cesium.Model) {
+            const model = pickedObject.primitive;
+            const data = model.id;
+
+            if (data) {
+                // Show Cesium InfoBox (default popup)
+                viewer.selectedEntity = new Cesium.Entity({
+                    name: data.name,
+                    description: `
+                        <div style="padding: 10px; font-family: sans-serif;">
+                            <p><strong>Kategori:</strong> ${data.category}</p>
+                            <p><strong>Deskripsi:</strong> ${data.description}</p>
+                            <hr/>
+                            <p style="font-size: 0.8em; color: #666;">ID: ${data.id}</p>
+                        </div>
+                    `
+                });
+                
+                // Highlight color on click (Orange)
+                model.color = Cesium.Color.ORANGE;
+            }
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+}
+
+/**
  * Setup Camera Position
  */
-function setupCamera(timeOut = 5000) {
+function setupCamera(timeOut = 0) {
     console.log(timeOut);
     // Wait for terrain and imagery to load
     setTimeout(() => {
@@ -220,14 +350,12 @@ function setupCamera(timeOut = 5000) {
             // Fly to a good initial altitude to see the terrain
             viewer.camera.flyTo({
                 destination: Cesium.Cartesian3.fromDegrees(
-                    112.177070,  // Approximate Indonesia coordinates
-                    -8.167807,   // Adjust based on your area
-                    1000 // Start higher to see more area
+                    112.17619, -8.16051, 300
                 ),
                 orientation: {
-                    heading: 0,
+                    heading: Cesium.Math.toRadians(0),
                     pitch: Cesium.Math.toRadians(-45),
-                    roll: 0
+                    roll: Cesium.Math.toRadians(0)
                 },
                 duration: 2
             });
@@ -243,9 +371,11 @@ function setupCamera(timeOut = 5000) {
 function setupUI() {
     // Layer visibility toggles
     const orthophotoToggle = document.getElementById('toggleOrthophoto');
-    const dsmToggle = document.getElementById('toggleDSM');
     const dtmToggle = document.getElementById('toggleDTM');
     const pointCloudToggle = document.getElementById('togglePointCloud');
+    const objectsToggle = document.getElementById('toggle3DObjects');
+    const waterSlider = document.getElementById('waterLevelSlider');
+    const waterValueLabel = document.getElementById('waterLevelValue');
 
     if (orthophotoToggle) {
         orthophotoToggle.addEventListener('change', (e) => {
@@ -255,24 +385,12 @@ function setupUI() {
         });
     }
 
-    if (dsmToggle && dtmToggle) {
-        dsmToggle.addEventListener('change', () => {
-            if (dsmToggle.checked) {
-                dtmToggle.checked = false;
-                viewer.terrainProvider = dsmProvider;
-                updateStatus('DSM (Surface) active');
-            } else if (!dtmToggle.checked) {
-                viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-                updateStatus('Terrain elevation disabled');
-            }
-        });
-
-        dtmToggle.addEventListener('change', () => {
+    if (dtmToggle) {
+        dtmToggle.addEventListener('change', (e) => {
             if (dtmToggle.checked) {
-                dsmToggle.checked = false;
                 viewer.terrainProvider = dtmProvider;
                 updateStatus('DTM (Ground) active');
-            } else if (!dsmToggle.checked) {
+            } else {
                 viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
                 updateStatus('Terrain elevation disabled');
             }
@@ -287,6 +405,15 @@ function setupUI() {
         });
     }
 
+    if (objectsToggle) {
+        objectsToggle.addEventListener('change', (e) => {
+            loadedModels.forEach(model => {
+                model.show = e.target.checked;
+            });
+        });
+    }
+
+
     // Opacity slider
     const opacitySlider = document.getElementById('orthophotoOpacity');
     const opacityValue = document.getElementById('opacityValue');
@@ -298,6 +425,17 @@ function setupUI() {
             if (opacityValue) {
                 opacityValue.textContent = Math.round(opacity * 100) + '%';
             }
+        });
+    }
+
+    if (waterSlider) {
+        waterSlider.addEventListener('input', (e) => {
+            const level = parseFloat(e.target.value);
+            waterHeight = level;
+            if (waterValueLabel) {
+                waterValueLabel.textContent = level + 'm';
+            }
+            updateStatus(`Flood level: ${level}m`);
         });
     }
 
@@ -318,6 +456,34 @@ function setupUI() {
             }
         });
     }
+
+    // --- COORDINATE PICKER (DEBUG TOOL) ---
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction((click) => {
+        const ray = viewer.camera.getPickRay(click.position);
+        const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+        
+        if (cartesian) {
+            const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+            const longitude = Cesium.Math.toDegrees(cartographic.longitude);
+            const latitude = Cesium.Math.toDegrees(cartographic.latitude);
+            const height = cartographic.height;
+
+            console.log('📍 Clicked Coordinate:');
+            console.log(`Longitude: ${longitude.toFixed(7)}`);
+            console.log(`Latitude: ${latitude.toFixed(7)}`);
+            console.log(`Height: ${height.toFixed(2)}`);
+            
+            updateStatus(`Coord: ${longitude.toFixed(5)}, ${latitude.toFixed(5)} (Logged to Console)`);
+            
+            // Auto-copy to clipboard (optional but handy)
+            const coordStr = `${longitude.toFixed(7)}, ${latitude.toFixed(7)}`;
+            navigator.clipboard.writeText(coordStr).then(() => {
+                console.log('Copy to clipboard: ' + coordStr);
+            });
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    // --- END DEBUG TOOL ---
 }
 
 /**
@@ -334,7 +500,7 @@ function showWelcomePanel() {
             setTimeout(() => {
                 panel.style.display = 'none';
             }, 500);
-        }, 5000);
+        }, 100);
     }
 }
 
@@ -378,6 +544,71 @@ function getCurrentCameraPosition() {
     console.log('Pitch:', Cesium.Math.toDegrees(camera.pitch));
     console.log('Roll:', Cesium.Math.toDegrees(camera.roll));
 }
+
+/**
+ * Setup Water/Flood Simulation Layer (Affected Area)
+ */
+function setupWaterSimulation() {
+    // Definisi area poligon air yang lebih luas (Area Terdampak)
+    // Berdasarkan request: 500m Utara, 300m Selatan dari area sungai
+    const rectangle = Cesium.Rectangle.fromDegrees(
+        112.1725, // West
+        -8.1670,  // South (~50m south of river)
+        112.1790, // East
+        -8.1646   // North (~100m north of river)
+    );
+
+    floodEntity = viewer.entities.add({
+        name: 'Flood Simulation',
+        rectangle: {
+            coordinates: new Cesium.CallbackProperty(() => {
+                return rectangle;
+            }, false),
+            extrudedHeight: new Cesium.CallbackProperty(() => {
+                return waterHeight;
+            }, false),
+            height: new Cesium.CallbackProperty(() => {
+                return waterHeight - 100; 
+            }, false),
+            material: Cesium.Color.fromCssColorString('#006994').withAlpha(0.5),
+            show: true
+        }
+    });
+
+    console.log('🌊 Dynamic flood layer (Affected Area) initialized');
+}
+
+/**
+ * Load Static River from GeoJSON
+ */
+// async function loadRiverGeoJson() {
+//     try {
+//         console.log('Loading river GeoJSON...');
+        
+//         riverDataSource = await Cesium.GeoJsonDataSource.load('/data/assets/river/sample_river.geojson', {
+//             fill: Cesium.Color.fromCssColorString('#006994').withAlpha(0.8),
+//             stroke: Cesium.Color.fromCssColorString('#006994').withAlpha(0.8),
+//             strokeWidth: 1
+//         });
+
+//         viewer.dataSources.add(riverDataSource);
+
+//         // Adjust height for all river entities (static water at 186.5m)
+//         const entities = riverDataSource.entities.values;
+//         for (let i = 0; i < entities.length; i++) {
+//             const entity = entities[i];
+//             if (entity.polygon) {
+//                 entity.polygon.height = 159.5; // Base of water
+//                 entity.polygon.extrudedHeight = 160.3; // Surface of water
+//                 entity.polygon.material = Cesium.Color.fromCssColorString('#006994').withAlpha(0.8);
+//             }
+//         }
+
+//         console.log('✅ River GeoJSON loaded');
+//     } catch (error) {
+//         console.error('❌ Error loading river GeoJSON:', error);
+//     }
+// }
 
 // Make available globally for debugging
 window.getCurrentCameraPosition = getCurrentCameraPosition;
