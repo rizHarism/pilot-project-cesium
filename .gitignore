@@ -1,54 +1,56 @@
-# Dependencies
-node_modules/
-package-lock.json
-yarn.lock
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Data files (too large for git)
-data/imagery/*
-data/imagery2/*
-data/imagery4/*
-data/imagery5/*
-data/terrain/*
-data/3dtiles/*
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Keep data directory structure
-!data/imagery/.gitkeep
-!data/imagery2/.gitkeep
-!data/imagery4/.gitkeep
-!data/imagery5/.gitkeep
-!data/terrain/.gitkeep  
-!data/3dtiles/.gitkeep
+# testing
+/coverage
 
-# Environment variables
-.env
-.env.local
+# next.js
+/.next/
+/out/
 
-# IDE
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# production
+/build
 
-# OS
+# misc
 .DS_Store
-Thumbs.db
-desktop.ini
+*.pem
 
-# Logs
-*.log
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# Build outputs (if any)
-dist/
-build/
-*.zip
+# env files (can opt-in for committing if needed)
+.env*
 
-# Temporary files
-*.tmp
-*.temp
-~*
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# --- ARUNIKA DIGITAL TWIN PROJECT ---
+# Ignore massive 3D data and tilesets
+/data/
+*.terrain
+*.png
+*.glb
+*.gltf
+*.b3dm
+*.las
+*.laz
+
+# Ignore utility script for massive data
+serve_terrain.js
+

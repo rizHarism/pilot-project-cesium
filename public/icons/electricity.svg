@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#1a3a1a" stroke="#4ade80" stroke-width="2"/>
+  <!-- Lightning bolt -->
+  <polygon points="36,10 22,34 31,34 28,54 42,30 33,30" fill="#facc15" stroke="#fbbf24" stroke-width="1"/>
+</svg>

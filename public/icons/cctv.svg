@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#1e3a5f" stroke="#4a90d9" stroke-width="2"/>
+  <!-- Camera body -->
+  <rect x="10" y="22" width="30" height="20" rx="4" fill="white"/>
+  <!-- Camera lens -->
+  <circle cx="25" cy="32" r="7" fill="#1e3a5f"/>
+  <circle cx="25" cy="32" r="4" fill="#4a90d9"/>
+  <!-- Camera mount/arm -->
+  <rect x="38" y="27" width="14" height="4" rx="2" fill="white"/>
+  <!-- Recording dot -->
+  <circle cx="51" cy="22" r="4" fill="#ff3b3b"/>
+</svg>

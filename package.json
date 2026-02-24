@@ -1,25 +1,31 @@
 {
-  "name": "cesium-digital-twin-pilot",
-  "version": "1.0.0",
-  "description": "Digital Twin Pilot Project - Cesium Viewer with Orthophoto and DSM",
-  "main": "src/index.html",
+  "name": "cesium-app",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "http-server . -p 8080 -c-1 --cors",
-    "dev": "http-server . -p 8080 -c-1 --cors -o /src/index.html"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "postinstall": "node scripts/copy-cesium.js"
   },
-  "keywords": [
-    "cesium",
-    "digital-twin",
-    "3d",
-    "gis"
-  ],
-  "author": "ARUNIKA",
-  "license": "ISC",
   "dependencies": {
-    "cesium": "^1.113.0",
-    "express": "^5.2.1"
+    "cesium": "^1.138.0",
+    "copy-webpack-plugin": "^13.0.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "http-server": "^14.1.1"
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
