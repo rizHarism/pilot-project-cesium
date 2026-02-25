@@ -91,7 +91,7 @@ export default function CesiumScene({
             orthophotoLayerRef.current = viewer.imageryLayers.addImageryProvider(imageryProvider);
 
             // Setup Water / Flood Simulation
-            const floodRect = Cesium.Rectangle.fromDegrees(112.1725, -8.1670, 112.1790, -8.1646);
+            const floodRect = Cesium.Rectangle.fromDegrees(112.172618282, -8.167123097, 112.179076059, -8.158026721);
             const waterState = { height: 161.0 };
             (viewer as any)._waterState = waterState;
 

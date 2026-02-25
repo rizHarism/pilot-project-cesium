@@ -23,7 +23,7 @@ export default function Home() {
   const [showDTM, setShowDTM] = useState(true);
   const [showModels, setShowModels] = useState(true);
   const [orthophotoOpacity, setOrthophotoOpacity] = useState(1);
-  const [waterLevel, setWaterLevel] = useState(160.1);
+  const [waterLevel, setWaterLevel] = useState(159.9);
   const [cameraResetTrigger, setCameraResetTrigger] = useState(0);
   const [cctvModal, setCctvModal] = useState<{ open: boolean; cctv: CctvConfig | null }>({ open: false, cctv: null });
   const [elecPanel, setElecPanel] = useState<ElectricityPointConfig | null>(null);
@@ -120,11 +120,15 @@ export default function Home() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-white-400 text-xs">Water Level</span>
-                <span className="text-blue-400 text-xs font-bold tabular-nums">{waterLevel.toFixed(2)} m</span>
+                <span className="text-blue-400 text-xs font-bold tabular-nums">{(waterLevel - 159.9).toFixed(2)} m</span>
               </div>
-              <input type="range" min="155" max="165" step="0.01" value={waterLevel}
+              <input type="range" min="159.9" max="165" step="0.01" value={waterLevel}
                 onChange={(e) => setWaterLevel(parseFloat(e.target.value))}
                 className="w-full h-1 bg-slate-700 rounded-full appearance-none cursor-pointer accent-blue-400" />
+              <div className="flex justify-between text-[10px] text-white-600 mt-0.5">
+                <span>0 m (dry)</span>
+                <span>5 m (flood)</span>
+              </div>
             </div>
 
             {/* Reset Camera */}
