@@ -33,8 +33,9 @@ export default function Home() {
 
       {/* 3D MAP */}
       <CesiumScene
-        terrainUrl="http://localhost:8080/data/terrain/darungan/"
-        imageryUrl="http://localhost:8080/data/imagery5/{z}/{x}/{y}.png"
+        terrainUrl={process.env.NEXT_PUBLIC_TERRAIN_URL ?? 'http://localhost:8080/data/terrain/darungan/'}
+        imageryUrl={process.env.NEXT_PUBLIC_IMAGERY_URL ?? 'http://localhost:8080/data/imagery5/{z}/{x}/{y}.png'}
+
         showOrthophoto={showOrthophoto}
         orthophotoOpacity={orthophotoOpacity}
         showDTM={showDTM}

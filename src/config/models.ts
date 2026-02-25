@@ -14,8 +14,9 @@ export interface ModelConfig {
     localOffset: { x: number; y: number; z: number };
 }
 
-// Base URL for GLB assets served by Express (development) or LiteSpeed (production)
-export const MODEL_BASE_URL = "http://localhost:8080";
+// Base URL for GLB/data assets — set in .env.local (dev) or .env.production
+export const MODEL_BASE_URL = process.env.NEXT_PUBLIC_DATA_BASE_URL ?? 'http://localhost:8080';
+
 
 export const MODELS: ModelConfig[] = [
     { id: '1', name: 'Building A', category: 'Hunian', description: 'Hunian warga darungan', url: '/data/assets/glb/lod1/1.glb', longitude: 112.1748527, latitude: -8.1594355, height: 0, heading: 90, localOffset: { x: 32, y: 180.3, z: 161.62 } },
@@ -58,7 +59,7 @@ export const CCTV_POINTS: CctvConfig[] = [
         longitude: 112.1752153,
         latitude: -8.1661888,
         height: 168,  // Slightly different height so billboards don't overlap
-        youtubeVideoId: 'wKBnkkUzC7Y',  // Same placeholder for pilot
+        youtubeVideoId: '9WnxYFnRYwc',  // Same placeholder for pilot
     },
 ];
 

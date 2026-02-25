@@ -54,3 +54,7 @@ next-env.d.ts
 # Ignore utility script for massive data
 serve_terrain.js
 
+# Environment variables — local secrets must never be committed
+.env.local
+
+
