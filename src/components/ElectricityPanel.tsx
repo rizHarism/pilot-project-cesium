@@ -108,7 +108,7 @@ export default function ElectricityPanel({ data, onClose }: ElectricityPanelProp
                 .pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
             `}</style>
 
-            <div className="w-80 h-full bg-slate-950/95 border-l border-slate-700/60 backdrop-blur-xl flex flex-col shadow-2xl">
+            <div className="w-full md:w-80 h-full bg-slate-950/95 border-l border-slate-700/60 backdrop-blur-xl flex flex-col shadow-2xl">
 
                 {/* Amber accent bar */}
                 <div className="h-0.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-transparent flex-shrink-0" />
@@ -119,11 +119,11 @@ export default function ElectricityPanel({ data, onClose }: ElectricityPanelProp
                         <div className="w-8 h-8 rounded-lg bg-amber-400/15 border border-amber-400/30 flex items-center justify-center text-base">⚡</div>
                         <div>
                             <p className="text-white font-semibold text-sm leading-tight">Monitoring Listrik</p>
-                            <p className="text-white-500 text-[10px]">{data.buildingName}</p>
+                            <p className="text-white/60 text-[10px]">{data.buildingName}</p>
                         </div>
                     </div>
                     <button onClick={onClose}
-                        className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-white-400 hover:text-white flex items-center justify-center text-sm transition">
+                        className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-white/60 hover:text-white flex items-center justify-center text-sm transition">
                         ✕
                     </button>
                 </div>
@@ -143,26 +143,26 @@ export default function ElectricityPanel({ data, onClose }: ElectricityPanelProp
                     {/* Sensor Cards: Tegangan / Arus / Daya */}
                     <div className="grid grid-cols-3 gap-2">
                         <div className="bg-slate-800/60 rounded-xl p-2.5 text-center border border-slate-700/50">
-                            <p className="text-[10px] text-white-500 mb-1">Tegangan</p>
+                            <p className="text-[10px] text-white/70 mb-1">Tegangan</p>
                             <p className="text-sky-400 font-bold text-base">{data.voltageV}</p>
-                            <p className="text-[9px] text-white-600 mt-0.5">Volt</p>
+                            <p className="text-[9px] text-white/50 mt-0.5">Volt</p>
                         </div>
                         <div className="bg-slate-800/60 rounded-xl p-2.5 text-center border border-slate-700/50">
-                            <p className="text-[10px] text-white-500 mb-1">Arus</p>
+                            <p className="text-[10px] text-white/70 mb-1">Arus</p>
                             <p className="text-amber-400 font-bold text-base">{liveAmps.toFixed(1)}</p>
-                            <p className="text-[9px] text-white-600 mt-0.5">Ampere</p>
+                            <p className="text-[9px] text-white/50 mt-0.5">Ampere</p>
                         </div>
                         <div className="bg-slate-800/60 rounded-xl p-2.5 text-center border border-slate-700/50">
-                            <p className="text-[10px] text-white-500 mb-1">Daya</p>
+                            <p className="text-[10px] text-white/70 mb-1">Daya</p>
                             <p className="text-amber-300 font-bold text-base">{liveKwh.toFixed(2)}</p>
-                            <p className="text-[9px] text-white-600 mt-0.5">kW</p>
+                            <p className="text-[9px] text-white/50 mt-0.5">kW</p>
                         </div>
                     </div>
 
                     {/* Live Power Bar */}
                     <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-white-400">Konsumsi Realtime</span>
+                            <span className="text-xs text-white/70">Konsumsi Realtime</span>
                             <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-medium">
                                 <span className="pulse-slow w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                                 LIVE
@@ -170,23 +170,23 @@ export default function ElectricityPanel({ data, onClose }: ElectricityPanelProp
                         </div>
                         <div className="flex items-end gap-1.5 mb-3">
                             <span className="text-3xl font-bold text-white tabular-nums">{liveKwh.toFixed(2)}</span>
-                            <span className="text-white-500 text-sm mb-1">kW</span>
+                            <span className="text-white/60 text-sm mb-1">kW</span>
                         </div>
                         <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
                             <div className="h-full rounded-full transition-all duration-700"
                                 style={{ width: `${progressPct}%`, background: progressColor }} />
                         </div>
                         <div className="flex justify-between mt-1.5">
-                            <span className="text-[10px] text-white-600">0 kW</span>
-                            <span className="text-[10px] text-white-600">Max 10 kW</span>
+                            <span className="text-[10px] text-white/40">0 kW</span>
+                            <span className="text-[10px] text-white/40">Max 10 kW</span>
                         </div>
                     </div>
 
                     {/* Daily Usage Chart */}
                     <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
                         <div className="flex items-center justify-between mb-2">
-                            <p className="text-xs font-semibold text-white-300">Konsumsi Harian</p>
-                            <div className="flex items-center gap-2.5 text-[9px] text-white-500">
+                            <p className="text-xs font-semibold text-white/90">Konsumsi Harian</p>
+                            <div className="flex items-center gap-2.5 text-[9px] text-white/60">
                                 <span className="flex items-center gap-1">
                                     <span className="w-2 h-2 rounded-sm bg-sky-400 inline-block" />Normal
                                 </span>
@@ -201,13 +201,13 @@ export default function ElectricityPanel({ data, onClose }: ElectricityPanelProp
                     {/* Summary */}
                     <div className="grid grid-cols-2 gap-2">
                         <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
-                            <p className="text-[10px] text-white-500 mb-1">Total Hari Ini</p>
+                            <p className="text-[10px] text-white/70 mb-1">Total Hari Ini</p>
                             <p className="text-white font-bold text-lg tabular-nums">
-                                {totalKwh}<span className="text-[10px] text-white-500 font-normal ml-1">kWh</span>
+                                {totalKwh}<span className="text-[10px] text-white/60 font-normal ml-1">kWh</span>
                             </p>
                         </div>
                         <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
-                            <p className="text-[10px] text-white-500 mb-1">Est. Biaya</p>
+                            <p className="text-[10px] text-white/70 mb-1">Est. Biaya</p>
                             <p className="text-amber-400 font-bold text-sm tabular-nums">
                                 Rp {(parseFloat(totalKwh) * 1445).toLocaleString('id-ID')}
                             </p>
@@ -215,22 +215,22 @@ export default function ElectricityPanel({ data, onClose }: ElectricityPanelProp
                     </div>
 
                     {/* IoT Metadata */}
-                    <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800/80 text-[10px] text-white-600 flex flex-col gap-1.5">
+                    <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800/80 text-[10px] text-white/50 flex flex-col gap-1.5">
                         <div className="flex justify-between">
                             <span>Sensor ID</span>
-                            <span className="text-white-400 font-mono">{data.id.toUpperCase()}</span>
+                            <span className="text-white/80 font-mono">{data.id.toUpperCase()}</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Protokol</span>
-                            <span className="text-white-400">MQTT / Simulated</span>
+                            <span className="text-white/80">MQTT / Simulated</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Update Interval</span>
-                            <span className="text-white-400">1.5 detik</span>
+                            <span className="text-white/80">1.5 detik</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Koordinat</span>
-                            <span className="text-white-400 font-mono">{data.latitude.toFixed(5)}, {data.longitude.toFixed(5)}</span>
+                            <span className="text-white/80 font-mono">{data.latitude.toFixed(5)}, {data.longitude.toFixed(5)}</span>
                         </div>
                     </div>
 
