@@ -46,6 +46,10 @@ export default function CesiumScene({
         if (!containerRef.current || isInitialized.current) return;
         isInitialized.current = true;
 
+        if (process.env.NEXT_PUBLIC_CESIUM_TOKEN) {
+            Cesium.Ion.defaultAccessToken = process.env.NEXT_PUBLIC_CESIUM_TOKEN;
+        }
+
         (window as any).CESIUM_BASE_URL = '/cesium/';
 
         const initializeViewer = async () => {
